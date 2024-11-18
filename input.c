@@ -1,18 +1,25 @@
-#include <stdio.h>
+#include <stdio.h> // Engelsk eller Dansk?
 
 int main(void){
 
-    printf("Velkommen til vores Movie Recommender! Nu vil vi gerne have noget information fra dig :)\n");
-    char *genre1 = '?';
-    int antalgenre = 9;
+    char genrepref1 = '?', genrepref2 = '?', genrepref3 = '?'; // 3 genre preferencer
+    char genre[16][9] = {"Action", "Adventure", "Animation", "Biography", "Comedy", "Crime", "Drama", "Family",
+                          "Fantasy", "History", "Horror", "Mystery", "Romance", "Sci-Fi", "Sport", "Thriller"};
+
+    printf("Velkommen til vores Movie Recommender! Nu vil vi gerne have noget information fra dig :)\n"); // Skal måske ændres :-)
+
     do {
-    printf("Indtast genre 1 du gerne vil se (Skriv ? for liste af genre):");
-    scanf(" %s", &genre1);
-    for (int i = 0; i > ; i++){
+    printf("Indtast 3 genre du gerne vil se, sepereret med et komma (,) (Skriv ? for liste af genre): ");
+    scanf(" %s, %s, %s", &genrepref1, &genrepref2, &genrepref3);
+    for (int i = 0; i > 16; i++){
         // Lav liste over alle genre
     }
 
-    } while (genre1 != '?');
+    if (genrepref1 == '?') {
+        printf("\nAction, Adventure, Animation, Biography, Comedy, Crime, Drama, Family, \nFantasy, History, Horror, Mystery, Romance, Sci-Fi, Sport, Thriller\n");
+    }
+
+    } while (genrepref1 == '?');
 
 
     return 0;
