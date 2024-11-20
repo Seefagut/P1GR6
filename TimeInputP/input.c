@@ -26,19 +26,19 @@ struct conpref {
 
 int main(void){
 
-    char nv;
+    char nc = '?';
 
-    do {
-        printf("Vil du have en ny anbefaling eller fortsaette med en serie? (n for ny / v for videre): "); // (ny / videre) er placeholders
-        scanf(" %c", &nv);
-    } while (nv != 'n' && nv != 'v');
+    do { // New recommendation or continue with series?
+        printf("Do you want a new recommendation or continue watching a series? (n for new / c for continue): \n");
+        scanf(" %c", &nc);
+    } while (nc != 'n' && nc != 'c'); // check if user typed n or c
 
-    if (nv == 'n'){
-        struct pref preference = new_rec();
-    } else if (nv == 'v'){
-        struct conpref series = con_rec(); // skriv func
-    } else {
-        printf("Fejl med programmet, stopper");
+    if (nc == 'n'){
+        struct pref preference = new_rec(); // run new recommendation data collection
+    } else if (nc == 'c'){
+        struct conpref series = con_rec(); // run continue series data collection
+    } else { // if somehow nc is not n or c
+        printf("Problem with program, stopping");
         exit(EXIT_FAILURE);
     }
 
@@ -48,8 +48,8 @@ int main(void){
 
 struct pref new_rec(void){
 
-    int g1 = -1, g2 = -1, g3 = -1;
-    char gp1[10] = "?", gp2[10] = "?", gp3[10] = "?"; // 3 genre preferencer
+    int g1 = -1, g2 = -1, g3 = -1; // g1-2-3 default index -1
+    char gp1[10] = "?", gp2[10] = "?", gp3[10] = "?"; // 3 genre preferences
     char genre[16][10] = {"Action", "Adventure", "Animation", "Biography", "Comedy", "Crime", "Drama", "Family",
                           "Fantasy", "History", "Horror", "Mystery", "Romance", "Sci-Fi", "Sport", "Thriller"};
 
@@ -57,46 +57,47 @@ struct pref new_rec(void){
 
     int min_rating = 0, max_rating = 0;
 
-    printf("Velkommen til vores Movie Recommender! Nu vil vi gerne have noget information fra dig :)\n"); // Skal måske ændres :-)
+    printf("\nWelcome to the Software 1 Group 6 Movie recommender!\n\n");
 
-    do {
-        printf("Indtast 3 genre du gerne vil se, sepereret med et komma (,) (Skriv ? for liste af genre): ");
+    do { // Get 3 genres
+        printf("\nWrite 1 to 3 genres you want to see, separated by a comma (,) (Write '?' for a list of genres): \n");
         scanf(" %9s, %9s, %9s", &gp1, &gp2, &gp3);
-        for (int i = 0; i > 16; i++){
+
+        for (int i = 0; i < 16; i++){
             if (strcmp(gp1, genre[i]) == 0){
                 g1 = i;
             } else if (strcmp(gp2, genre[i]) == 0) {
                 g2 = i;
             } else if (strcmp(gp3, genre[i]) == 0) {
                 g3 = i;
-            }
+            } // Get the genre indexes 0-15
         }
 
-        if (strcmp(gp1, "?") == 0) {
+        if (strcmp(gp1, "?") == 0) { // print list of genres
             printf("\nAction, Adventure, Animation, Biography, Comedy, Crime, Drama, Family, \nFantasy, History, Horror, Mystery, Romance, Sci-Fi, Sport, Thriller\n");
         }
 
-    } while (strcmp(gp1, "?") == 0);
+    } while (g1 == -1); // repeat if no valid genre 1
 
     do {
-        printf("Vil du have voksenfilm med i anbefalingerne? (y/n) (18+): ");
+        printf("\nDo you want to be recommended 18+ films? (y/n): \n");
         scanf(" %c", &ar);
-    } while (ar != 'y' && ar != 'n');
+    } while (ar != 'y' && ar != 'n'); // repeat if no valid answer
 
     do {
-        printf("Indtast minimum IMDB vurdering (Helt tal mellem 1 og 10): ");
+        printf("\nWrite the minimum IMDb rating you want to look for (whole number between 1 and 9): \n");
         scanf(" %d", &min_rating);
-    } while (min_rating < 0 || min_rating >= 10);
+    } while (min_rating < 0 || min_rating > 10); // repeat if not between 1 and 9
 
     do {
-        printf("Indtast maximum IMDB vurdering (Helt tal mellem 1 og 10): ");
+        printf("\nWrite the maximum IMDb rating you want to look for (whole number between 1 and 10): \n");
         scanf(" %d", &max_rating);
-    } while (max_rating <= min_rating || max_rating > 10);
+    } while (max_rating <= min_rating || max_rating > 10); // repeat if not bigger than min_rating and less than 10
 
-    int diff = getdiff();
+    int diff = getdiff(); // get time diff in seconds
 
     struct pref preference;
-
+    // create struct of data
     strcpy(preference.genre1, genre[g1]);
     preference.genrepref1 = g1;
     strcpy(preference.genre2, genre[g2]);
@@ -113,16 +114,16 @@ struct pref new_rec(void){
 
 struct conpref con_rec(void){
     char series[50] = "?";
-    do {
-        printf("Indtast navnet på serien:");
+    do { // Get series name
+        printf("\nWrite the name of the series: \n");
         scanf(" %49s", &series);
 
     } while (series == "?");
 
-    int diff = getdiff();
+    int diff = getdiff(); // Get time diff in seconds
 
     struct conpref con_series;
-
+    // create struct of data
     strcpy(con_series.series, series);
     con_series.timetowatch = diff;
 }
@@ -134,20 +135,20 @@ int getdiff(void){
     int hr, minutes;
     int diff = 0;
 
-    time(&time1);
-    struct tm *starttime = localtime(&time1);
-    stoptimetm = *starttime;
+    time(&time1); // get current UNIX time
+    struct tm *starttime = localtime(&time1); // convert UNIX to Year, Day, etc.
+    stoptimetm = *starttime; // set stoptime to today
 
-    printf("Indtast stoptid (Ex. 18:40): ");
+    printf("\nWrite the stoptime (Eg. 18:40): \n");
     scanf("%d:%d", &hr, &minutes);
 
-    stoptimetm.tm_hour = hr;
+    stoptimetm.tm_hour = hr; // set given time into stoptime
     stoptimetm.tm_min = minutes;
-    stoptimetm.tm_sec = 0;
+    stoptimetm.tm_sec = 0; // reset seconds
 
-    time_t stoptime = mktime(&stoptimetm);
+    time_t stoptime = mktime(&stoptimetm); // convert back to UNIX
 
-    if (difftime(stoptime, time1) <= 0){
+    if (difftime(stoptime, time1) <= 0){ // if stop time is next day, add 1 day in seconds
         diff = difftime(stoptime, time1) + 86400;       
     } else {
         diff = difftime(stoptime, time1);
