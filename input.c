@@ -74,12 +74,12 @@ struct pref new_rec(){
     do {
         printf("Indtast minimum IMDB vurdering (Helt tal mellem 1 og 10): ");
         scanf(" %d", &min_rating);
-    } while (min_rating > 0);
+    } while (min_rating > 0 && min_rating <= 10);
 
     do {
         printf("Indtast maximum IMDB vurdering (Helt tal mellem 1 og 10): ");
         scanf(" %d", &max_rating);
-    } while (max_rating < min_rating);
+    } while (max_rating <= min_rating && max_rating <= 10);
 
 
 
