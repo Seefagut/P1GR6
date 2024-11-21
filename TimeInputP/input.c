@@ -38,7 +38,7 @@ int main(void){
     } else if (nc == 'c'){
         struct conpref series = con_rec(); // run continue series data collection
     } else { // if somehow nc is not n or c
-        printf("Problem with program, stopping");
+        printf("Problem with program, stopping...");
         exit(EXIT_FAILURE);
     }
 
