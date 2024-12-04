@@ -173,6 +173,10 @@ void saveMovieData(movieData *moviesPreSort)
         // The last data we need to scan from the dataset is actors
         // fscanf(pFile, "%*[^[]")
 
+
+        // Actors can be found!!! When there is a director listed there is ' symbol before the next comma, but for all actors there is not one before the next comma!
+        // This mean we can differentiate and make a senario where we skip beyond "stars:" and then continue filling actors like if there wasnt a director listed
+
         printf("title %i: %s, age: %s, dur: %i, g1: %s, g2: %s, g3: %s, g4: %s, g5: %s, isSer: %i, rati: %.1lf\n", i, moviesPreSort[i].title,
                moviesPreSort[i].ageRating, moviesPreSort[i].duration, moviesPreSort[i].genre[0], moviesPreSort[i].genre[1], moviesPreSort[i].genre[2], moviesPreSort[i].genre[3], moviesPreSort[i].genre[4], moviesPreSort[i].isSeries, moviesPreSort[i].rating);
 
