@@ -8,6 +8,7 @@
 #define MAXDURATION 4
 #define MAXAMOUNTOFGENRES 5
 #define ACTORSMAXLENGTH 200
+#define MOVIESTOTAL 20
 #define TIMEMAXLENGTH 4
 #define YEARMAXLENGTH 11
 #define MULTIPLEGENRESMAXLENGTH 500
@@ -24,67 +25,98 @@ typedef struct movieData
     char actors[ACTORSMAXLENGTH];
 } movieData;
 
+// Prototypes
+void saveMovieData();
+
 int main(void)
 {
+    printf("Not overflow!\n");
+    movieData movies[MOVIESTOTAL];
+    movieData series[MOVIESTOTAL];
+
+    saveMovieData();
+
+    return 0;
+}
+
+void saveMovieData()
+{
+    movieData moviesPreSort[MOVIESTOTAL];
+
     // To determine if a movie is a series or not, we will look at if its release date has a "-" in the name after the number
-    // This would suggest that a movie is released over the course of more of a year, which is only possible for tv-series
+    // This would suggest that a movie is released over the course of more than a year, which is only possible for tv-series
     // We therefore save the year information in a string, which we will later use to determine if a movie is a series or not
     char year[YEARMAXLENGTH];
     // We save all genres in one string to begin with, as the amount of genres varies between the data
     char genres[MULTIPLEGENRESMAXLENGTH];
     char duration[DURATIONMAXLENGTH] = "0";
-    movieData firstMovie;
     FILE *pFile = fopen("movies.csv", "r");
+
     if (pFile == NULL)
     {
         printf("Error opening file\n");
-        return 0;
-    }
-    // %*[^\n]
-    fscanf(pFile, "%49[^,], %10[^,], %9[^,], %9[^,],", firstMovie.title, year, firstMovie.ageRating,
-           duration);
-    // We check if a movie is a series
-    firstMovie.isSeries = (year[5] == '-');
-
-    // If there is a valid duration, aka if it not left empty in the dataset, it will be saved
-    if (duration[0] != '0')
-    {
-        sscanf(duration, "%i", &firstMovie.duration);
+        return;
     }
 
-    // Before we continue saving data we need to determine if there are multiple genres or not
-    // If there are more than one, the genres will be listed within this "|" symbol
-    // If there is just one, the genre data will just be between comma like the rest of the data
-    char multipleGenreCheck[GENREMAXLENGTH];
-    fscanf(pFile, "%c", multipleGenreCheck);
-    if (multipleGenreCheck[0] == '|')
+    for (int i = 0; i < MOVIESTOTAL; i++)
     {
-        fscanf(pFile, "%499[^|]|,", genres);
-        // Since we save all the genres in one string, we have to split each genre up into its own string
-        // First we determine the amount of genres, which sscanf will return
-        int amountOfGenres = sscanf(genres, "%100[^,], %100[^,], %100[^,], %100[^,], %100[^|]", firstMovie.genre[0],
-                                    firstMovie.genre[1], firstMovie.genre[2], firstMovie.genre[3], firstMovie.genre[4]);
-        // strtok will "tokenize" the genres string via the comma operator, meaning it will read up to comma, which is
-        // when a genre ends in the string
-        char *token = strtok(genres, ",");
-        for (int i = 0; i < amountOfGenres; i++)
+        fscanf(pFile, " %49[^,], %10[^,], %9[^,], %9[^,],", moviesPreSort[i].title, year, moviesPreSort[i].ageRating,
+               duration);
+        // We check if a movie is a series
+        moviesPreSort[i].isSeries = (year[5] == '-');
+
+        // If there is a valid duration, aka if it not left empty in the dataset, it will be saved
+        if (duration[0] != '0')
         {
-            strcpy(token, firstMovie.genre[i]);
-            firstMovie.genre[i][GENREMAXLENGTH - 1] = '\0';
-            token = strtok(NULL, ",");
+            sscanf(duration, "%i", &moviesPreSort[i].duration);
         }
+
+        // Before we continue saving data we need to determine if there are multiple genres or not
+        // If there are more than one, the genres will be listed within this "|" symbol
+        // If there is just one, the genre data will just be between comma like the rest of the data
+        char multipleGenreCheck[GENREMAXLENGTH];
+        fscanf(pFile, " %c", multipleGenreCheck);
+        // As we need to save a value on all 5 genre variables of the struct, we will start by manually saving a value
+        // indicating that it is empty
+        for (int l = 0; l < MAXAMOUNTOFGENRES; l++)
+        {
+            strcpy(moviesPreSort[i].genre[l], "0");
+        }
+
+        if (multipleGenreCheck[0] == '|')
+        {
+            fscanf(pFile, " %499[^|]|,", genres);
+            // We save each genre
+            sscanf(genres, " %100[^,], %100[^,], %100[^,], %100[^,], %100[^|]", moviesPreSort[i].genre[0],
+                                        moviesPreSort[i].genre[1], moviesPreSort[i].genre[2], moviesPreSort[i].genre[3], moviesPreSort[i].genre[4]);
+        }
+        else
+        {
+            fscanf(pFile, " %99[^,],", moviesPreSort[i].genre[0]);
+            strcat(multipleGenreCheck, moviesPreSort[i].genre[0]);
+            strcpy(moviesPreSort[i].genre[0], multipleGenreCheck);
+        }
+
+        // In the same way we check if there are multiple genres, we will check if a rating is listed
+        // If there is no rating, the movie will be discarded, as rating is a criteria we use when recommending later
+        char ratingCheck[4];
+        fscanf(pFile, " %c", ratingCheck);
+        if (ratingCheck[0] == ',')
+        {
+            continue;
+        }
+        fscanf(pFile, " %2[^,]", &ratingCheck[1]);
+        sscanf(ratingCheck, "%lf", &moviesPreSort[i].rating);
+
+        // The last data we need to scan from the dataset is actors
+        // fscanf(pFile, "%*[^[]")
+
+        printf("title %i: %s, age: %s, dur: %i, g1: %s, g2: %s, g3: %s, g4: %s, g5: %s, isSer: %i, rati: %.1lf\n", i, moviesPreSort[i].title,
+               moviesPreSort[i].ageRating, moviesPreSort[i].duration, moviesPreSort[i].genre[0], moviesPreSort[i].genre[1], moviesPreSort[i].genre[2], moviesPreSort[i].genre[3], moviesPreSort[i].genre[4], moviesPreSort[i].isSeries, moviesPreSort[i].rating);
+
+        fscanf(pFile, " %*[^\n]");
     }
-    else
-    {
-        fscanf(pFile, "%99[^,],", firstMovie.genre[0]);
-        strcat(multipleGenreCheck, firstMovie.genre[0]);
-        strcpy(firstMovie.genre[0], multipleGenreCheck);
-    }
+    fclose(pFile);
 
-    fscanf(pFile, "%lf,|%*[^|]|", &firstMovie.rating);
-
-    printf("title: %s, year: %s, age rating: %s, duration: %i, genre 1: %s, genre 2: %s, genre 3: %s, genre 4: %s, genre 5: %s, isSeries: %i, rating: %.1lf\n", firstMovie.title,
-           year, firstMovie.ageRating, firstMovie.duration, firstMovie.genre[0], firstMovie.genre[1], firstMovie.genre[2], firstMovie.genre[3], firstMovie.genre[4], firstMovie.isSeries, firstMovie.rating);
-
-    return 0;
+    return;
 }
