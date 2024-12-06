@@ -196,7 +196,7 @@ void saveMovieData(movieData *moviesPreSort)
         {
             fscanf(pFile, " %499[^|]|,", genres);
             // We save each genre
-            sscanf(genres, " %19[^,], %19[^,], %19[^,], %19[^,], %19[^|]", moviesPreSort[i].genre[0],
+            sscanf(genres, " %19[^,], %19[^,], %19[^,]", moviesPreSort[i].genre[0],
                    moviesPreSort[i].genre[1], moviesPreSort[i].genre[2]);
         }
         else if (multipleGenreCheck[0] != ',')
@@ -304,11 +304,13 @@ void sortMovies(movieData *moviesPreSort, movieData *movies, movieData *series, 
                     {
                         copyData(series, isSeriesCounter, moviesPreSort, i);
                         isSeriesCounter++;
+                        break;
                     }
                     else
                     {
                         copyData(movies, isMovieCounter, moviesPreSort, i);
                         isMovieCounter++;
+                        break;
                     }
                 }
             }
