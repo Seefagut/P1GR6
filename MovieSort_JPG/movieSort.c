@@ -58,8 +58,8 @@ int main(void)
 {
     // temp input
     char nc = 'n';
-    pref newMovie = {"", 2, "Reality-TV", 1, "", 3, 1, 10, 10000, 'n'};
-    conpref conWatch = {"Attack on Titan", 10000};
+    pref newMovie = {"Animation", 2, "Horror", 1, "", 3, 4, 7, 3000, 'y'};
+    conpref conWatch = {"Bridgerton", 10000};
     movieData conWatchData;
 
     // As a lot of data has to be stored, we will save it using dynamic memory allocation
