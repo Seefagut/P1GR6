@@ -6,12 +6,14 @@
 #define GENREMAXLENGTH 12
 #define AGERATINGMAXLENGTH 10
 #define MAXDURATION 4
-#define MAXAMOUNTOFGENRES 5
-#define ACTORSMAXLENGTH 200
+#define MAXAMOUNTOFGENRES 3
+#define MAXAMOUNTOFACTORS 4
+#define ACTORSMAXLENGTH 50
 #define MOVIESTOTAL 9957
 #define TIMEMAXLENGTH 4
 #define YEARMAXLENGTH 13
 #define MULTIPLEGENRESMAXLENGTH 500
+#define MULTIPLEACTORSMAXLENGTH 1000
 #define DURATIONMAXLENGTH 10
 
 typedef struct movieData
@@ -22,7 +24,7 @@ typedef struct movieData
     int duration;
     char genre[MAXAMOUNTOFGENRES][GENREMAXLENGTH];
     double rating;
-    char actors[ACTORSMAXLENGTH];
+    char actor[MAXAMOUNTOFACTORS][ACTORSMAXLENGTH];
 } movieData;
 
 typedef struct pref
@@ -36,6 +38,7 @@ typedef struct pref
     int min;
     int max;
     int timetowatch;
+    char ageRating;
 } pref;
 
 typedef struct conpref
@@ -47,13 +50,15 @@ typedef struct conpref
 // Prototypes
 void saveMovieData(movieData *moviesPreSort);
 void discard(movieData *movieToDiscard);
-void sortMovies(movieData *moviesPreSort, movieData *movies, movieData *series, char nc, pref newMovie, char *conWatch, movieData *conWatchData);
+void sortMovies(movieData *moviesPreSort, movieData *movies, movieData *series, char nc, pref newMovie,
+                char *conWatch, movieData *conWatchData);
+void copyData(movieData *movieArray, int index, movieData *moviesPreSort, int indexPreSort);
 
 int main(void)
 {
     // temp input
     char nc = 'n';
-    pref newMovie = {"Adventure", 2, "yo", 1, "", 3, 2, 8, 10000};
+    pref newMovie = {"", 2, "Reality-TV", 1, "", 3, 1, 10, 10000, 'n'};
     conpref conWatch = {"Attack on Titan", 10000};
     movieData conWatchData;
 
@@ -63,15 +68,45 @@ int main(void)
     movieData *movies = malloc(MOVIESTOTAL * sizeof(movieData));
     movieData *series = malloc(MOVIESTOTAL * sizeof(movieData));
 
+    // Check if memory allocation is successful
+    if (moviesPreSort == NULL || movies == NULL || series == NULL)
+    {
+        printf("Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+
     saveMovieData(moviesPreSort);
     sortMovies(moviesPreSort, movies, series, nc, newMovie, conWatch.seriesName, &conWatchData);
     if (nc == 'c' && (strcmp(conWatchData.title, conWatch.seriesName) == 0))
     {
-        printf("Name: %s, isSeries: %i, ageRating: %s, duration: %i, g1: %s, g2: %s, g3: %s, g4: %s, g5: %s, rating: %lf\n", conWatchData.title, conWatchData.isSeries, conWatchData.ageRating, conWatchData.duration, conWatchData.genre[0], conWatchData.genre[1], conWatchData.genre[2], conWatchData.genre[3], conWatchData.genre[4], conWatchData.rating);
+        printf("Name: %s, isSeries: %i, ageRating: %s, duration: %i, g1: %s, g2: %s, g3: %s, rating:%lf,\nActor1: %s, Actor2: %s, Actor3: %s, Actor4: %s\n",
+               conWatchData.title, conWatchData.isSeries, conWatchData.ageRating, conWatchData.duration,
+               conWatchData.genre[0], conWatchData.genre[1], conWatchData.genre[2], conWatchData.rating,
+               conWatchData.actor[0], conWatchData.actor[1], conWatchData.actor[2], conWatchData.actor[3]);
     }
     else if (nc == 'c')
     {
         printf("Movie/series not found.\n");
+    }
+    else
+    {
+        // Print movies
+        for (int i = 0; i < 100; i++)
+        {
+            printf("MOVIES: title %i: %s, age: %s, dur: %i, g1: %s, g2: %s, g3: %s, isSer: %i, rati: %.1lf\nAc1:%s, Ac2: %s, Ac3: %s, Ac4: %s\n\n",
+                   i, movies[i].title, movies[i].ageRating, movies[i].duration, movies[i].genre[0],
+                   movies[i].genre[1], movies[i].genre[2], movies[i].isSeries, movies[i].rating,
+                   movies[i].actor[0], movies[i].actor[1], movies[i].actor[2], movies[i].actor[3]);
+        }
+
+        // Print series
+        for (int i = 0; i < 100; i++)
+        {
+            printf("SERIES: title %i: %s, age: %s, dur: %i, g1: %s, g2: %s, g3: %s, isSer: %i, rati: %.1lf\nAc1:%s, Ac2: %s, Ac3: %s, Ac4: %s\n\n",
+                   i, series[i].title, series[i].ageRating, series[i].duration, series[i].genre[0],
+                   series[i].genre[1], series[i].genre[2], series[i].isSeries, series[i].rating,
+                   series[i].actor[0], series[i].actor[1], series[i].actor[2], series[i].actor[3]);
+        }
     }
 
     free(moviesPreSort);
@@ -87,8 +122,9 @@ void saveMovieData(movieData *moviesPreSort)
     // This would suggest that a movie is released over the course of more than a year, which is only possible for tv-series
     // We therefore save the year information in a string, which we will later use to determine if a movie is a series or not
     char year[YEARMAXLENGTH];
-    // We save all genres in one string to begin with, as the amount of genres varies between the data
+    // We save all genres in one string to begin with, as the amount of genres varies between the data. The same applies to actors
     char genres[MULTIPLEGENRESMAXLENGTH];
+    char actors[MULTIPLEACTORSMAXLENGTH];
     FILE *pFile = fopen("movies.csv", "r");
 
     if (pFile == NULL)
@@ -117,6 +153,17 @@ void saveMovieData(movieData *moviesPreSort)
 
         fscanf(pFile, " %12[^,], %9[^,], %9[^,],", year, moviesPreSort[i].ageRating,
                stringduration);
+
+        // Agerating is translated to 'y' if they have adult rating (TV-MA) and 'n' if movie does not have adult rating
+        if (strcmp(moviesPreSort[i].ageRating, "TV-MA") == 0)
+        {
+            strcpy(moviesPreSort[i].ageRating, "y");
+        }
+        else
+        {
+            strcpy(moviesPreSort[i].ageRating, "n");
+        }
+
         // We check if a movie is a series
         moviesPreSort[i].isSeries = (year[5] == '-');
 
@@ -124,6 +171,8 @@ void saveMovieData(movieData *moviesPreSort)
         if (stringduration[0] != '0')
         {
             sscanf(stringduration, "%i", &moviesPreSort[i].duration);
+            // We convert duration from minutes to seconds
+            moviesPreSort[i].duration *= 60;
         }
         else
         {
@@ -136,7 +185,7 @@ void saveMovieData(movieData *moviesPreSort)
         // If there is just one, the genre data will just be between comma like the rest of the data
         char multipleGenreCheck[GENREMAXLENGTH] = "0";
         fscanf(pFile, " %c", multipleGenreCheck);
-        // As we need to save a value on all 5 genre variables of the struct, we will start by manually saving a value
+        // As we need to save a value on all 3 genre variables of the struct, we will start by manually saving a value
         // indicating that it is empty
         for (int l = 0; l < MAXAMOUNTOFGENRES; l++)
         {
@@ -148,7 +197,7 @@ void saveMovieData(movieData *moviesPreSort)
             fscanf(pFile, " %499[^|]|,", genres);
             // We save each genre
             sscanf(genres, " %19[^,], %19[^,], %19[^,], %19[^,], %19[^|]", moviesPreSort[i].genre[0],
-                   moviesPreSort[i].genre[1], moviesPreSort[i].genre[2], moviesPreSort[i].genre[3], moviesPreSort[i].genre[4]);
+                   moviesPreSort[i].genre[1], moviesPreSort[i].genre[2]);
         }
         else if (multipleGenreCheck[0] != ',')
         {
@@ -167,20 +216,48 @@ void saveMovieData(movieData *moviesPreSort)
             discard(&moviesPreSort[i]);
             continue;
         }
-        fscanf(pFile, " %2[^,]", &ratingCheck[1]);
+        fscanf(pFile, " %2[^,],", &ratingCheck[1]);
         sscanf(ratingCheck, "%lf", &moviesPreSort[i].rating);
 
         // The last data we need to scan from the dataset is actors
-        // fscanf(pFile, "%*[^[]")
+        // As we have no way of knowing how many actors that are listed we make sure to fill in "0" so we wont have
+        // unpredictable behaviour when using the actor data
+        for (int r = 0; r < MAXAMOUNTOFACTORS; r++)
+        {
+            strcpy(moviesPreSort[i].actor[r], "0");
+        }
 
+        // As some movies have directors listed, we first check if there is an director
+        // Directors are listed with a ' before the next comma, which allows to differentiate between directors and actors
+        fscanf(pFile, " %*[^[][%c", &moviesPreSort[i].actor[0][0]);
+        if (moviesPreSort[i].actor[0][0] == ']')
+        { // No actors are present. Rewrite actor 1 to '0'
+            moviesPreSort[i].actor[0][0] = '0';
+        }
+        else
+        {
+            fscanf(pFile, " %999[^]],", actors);
+            if (strrchr(actors, '~') != NULL)
+            {
+                sscanf(actors, " %*[^:]:\", \"%49[^\"]\"", moviesPreSort[i].actor[0]);
+                sscanf(actors, " %*[^:]:\", \"%*[^\"]\"%999[^]]", actors);
+            }
+            else
+            {
+                sscanf(actors, " %49[^\"]\"", moviesPreSort[i].actor[0]);
+                sscanf(actors, " %*[^\"]\"%999[^]]", actors);
+            }
+            // Save remaining actors (if there are any)
+            sscanf(actors, ",\"%49[^\"]\",\"%49[^\"]\",\"%49[^\"]\"", moviesPreSort[i].actor[1],
+                   moviesPreSort[i].actor[2], moviesPreSort[i].actor[3]);
+        }
 
-        // Actors can be found!!! When there is a director listed there is ' symbol before the next comma, but for all actors there is not one before the next comma!
-        // This mean we can differentiate and make a senario where we skip beyond "stars:" and then continue filling actors like if there wasnt a director listed
+        /* printf("title %i: %s, age: %s, dur: %i, g1: %s, g2: %s, g3: %s, isSer: %i, rati: %.1lf\nAc1:%s, Ac2: %s, Ac3: %s, Ac4: %s\n\n",
+                i, moviesPreSort[i].title, moviesPreSort[i].ageRating, moviesPreSort[i].duration, moviesPreSort[i].genre[0],
+                moviesPreSort[i].genre[1], moviesPreSort[i].genre[2], moviesPreSort[i].isSeries, moviesPreSort[i].rating,
+                moviesPreSort[i].actor[0], moviesPreSort[i].actor[1], moviesPreSort[i].actor[2], moviesPreSort[i].actor[3]);*/
 
-        printf("title %i: %s, age: %s, dur: %i, g1: %s, g2: %s, g3: %s, g4: %s, g5: %s, isSer: %i, rati: %.1lf\n", i, moviesPreSort[i].title,
-               moviesPreSort[i].ageRating, moviesPreSort[i].duration, moviesPreSort[i].genre[0], moviesPreSort[i].genre[1], moviesPreSort[i].genre[2], moviesPreSort[i].genre[3], moviesPreSort[i].genre[4], moviesPreSort[i].isSeries, moviesPreSort[i].rating);
-
-        fscanf(pFile, " %*[^\n]");
+        fscanf(pFile, "%*[^\n]");
     }
     fclose(pFile);
     return;
@@ -188,17 +265,53 @@ void saveMovieData(movieData *moviesPreSort)
 
 void discard(movieData *movieToDiscard)
 {
-    // By setting the title of a movie to "0" we can deem it as discarded and ignore it later when recommending movies
+    // By setting the data of a movie to "0" we can deem it as discarded and ignore it later when recommending movies
     strcpy(movieToDiscard->title, "0");
+    movieToDiscard->isSeries = 0;
+    strcpy(movieToDiscard->ageRating, "0");
+    movieToDiscard->duration = 0;
+    strcpy(movieToDiscard->genre[0], "0");
+    strcpy(movieToDiscard->genre[1], "0");
+    strcpy(movieToDiscard->genre[2], "0");
+    movieToDiscard->rating = 0;
+    strcpy(movieToDiscard->actor[0], "0");
+    strcpy(movieToDiscard->actor[1], "0");
+    strcpy(movieToDiscard->actor[2], "0");
+    strcpy(movieToDiscard->actor[3], "0");
 }
 
-void sortMovies(movieData *moviesPreSort, movieData *movies, movieData *series, char nc, pref newMovie, char *conWatch, movieData *conWatchData)
+void sortMovies(movieData *moviesPreSort, movieData *movies, movieData *series, char nc, pref newMovie,
+                char *conWatch, movieData *conWatchData)
 {
-    if (nc == 'n')
+    int isMovieCounter = 0, isSeriesCounter = 0;
+    if (nc == 'n') // If user want a new recommendation
     {
         for (int i = 0; i < MOVIESTOTAL; i++)
         {
-            // Check for search criteria here
+            // Check for search criteria
+            for (int l = 0; l < MAXAMOUNTOFGENRES; l++)
+            { // We check if movie match user's input
+                if ((strcmp(moviesPreSort[i].genre[l], newMovie.genre1) == 0 ||
+                     strcmp(moviesPreSort[i].genre[l], newMovie.genre2) == 0 ||
+                     strcmp(moviesPreSort[i].genre[l], newMovie.genre3) == 0 ||
+                     (newMovie.genre1[0] == '\0' && newMovie.genre2[0] == '\0' &&
+                      newMovie.genre3[0] == '\0')) &&
+                    (moviesPreSort[i].ageRating[0] == newMovie.ageRating || moviesPreSort[i].ageRating[0] == 'n') &&
+                    (moviesPreSort[i].rating >= newMovie.min && moviesPreSort[i].rating <= newMovie.max) &&
+                    moviesPreSort[i].duration <= newMovie.timetowatch)
+                {
+                    if (moviesPreSort[i].isSeries)
+                    {
+                        copyData(series, isSeriesCounter, moviesPreSort, i);
+                        isSeriesCounter++;
+                    }
+                    else
+                    {
+                        copyData(movies, isMovieCounter, moviesPreSort, i);
+                        isMovieCounter++;
+                    }
+                }
+            }
         }
     }
     else if (nc == 'c') // If user continues watching the movie name will be searched for
@@ -208,16 +321,7 @@ void sortMovies(movieData *moviesPreSort, movieData *movies, movieData *series, 
             if (strcmp(moviesPreSort[i].title, conWatch) == 0)
             {
                 // If movie/series is found, all information is saved in conWatchData
-                strcpy(conWatchData->title, conWatch);
-                conWatchData->isSeries = moviesPreSort[i].isSeries;
-                strcpy(conWatchData->ageRating, moviesPreSort[i].ageRating);
-                conWatchData->duration = moviesPreSort[i].duration;
-                strcpy(conWatchData->genre[0], moviesPreSort[i].genre[0]);
-                strcpy(conWatchData->genre[1], moviesPreSort[i].genre[1]);
-                strcpy(conWatchData->genre[2], moviesPreSort[i].genre[2]);
-                strcpy(conWatchData->genre[3], moviesPreSort[i].genre[3]);
-                strcpy(conWatchData->genre[4], moviesPreSort[i].genre[4]);
-                conWatchData->rating = moviesPreSort[i].rating;
+                copyData(conWatchData, 0, moviesPreSort, i);
                 break;
             }
         }
@@ -229,4 +333,26 @@ void sortMovies(movieData *moviesPreSort, movieData *movies, movieData *series, 
     }
 
     return;
+}
+
+void copyData(movieData *movieArray, int index, movieData *moviesPreSort, int indexPreSort)
+{
+    strcpy(movieArray[index].title, moviesPreSort[indexPreSort].title);
+
+    movieArray[index].isSeries = moviesPreSort[indexPreSort].isSeries;
+
+    strcpy(movieArray[index].ageRating, moviesPreSort[indexPreSort].ageRating);
+
+    movieArray[index].duration = moviesPreSort[indexPreSort].duration;
+
+    strcpy(movieArray[index].genre[0], moviesPreSort[indexPreSort].genre[0]);
+    strcpy(movieArray[index].genre[1], moviesPreSort[indexPreSort].genre[1]);
+    strcpy(movieArray[index].genre[2], moviesPreSort[indexPreSort].genre[2]);
+
+    movieArray[index].rating = moviesPreSort[indexPreSort].rating;
+
+    strcpy(movieArray[index].actor[0], moviesPreSort[indexPreSort].actor[0]);
+    strcpy(movieArray[index].actor[1], moviesPreSort[indexPreSort].actor[1]);
+    strcpy(movieArray[index].actor[2], moviesPreSort[indexPreSort].actor[2]);
+    strcpy(movieArray[index].actor[3], moviesPreSort[indexPreSort].actor[3]);
 }

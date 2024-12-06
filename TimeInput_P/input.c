@@ -3,6 +3,8 @@
 #include <time.h>
 #include <string.h>
 
+#define AMOUNTOFGENRES 21
+
 typedef struct pref
 {
     char genre1[10];
@@ -14,6 +16,7 @@ typedef struct pref
     int min;
     int max;
     int timetowatch;
+    char ageRating;
 } pref;
 
 typedef struct conpref
@@ -22,7 +25,7 @@ typedef struct conpref
     int timetowatch;
 } conpref;
 
-//Prototypes
+// Prototypes
 pref new_rec(void);
 conpref con_rec(void);
 int getdiff(void);
@@ -60,8 +63,8 @@ pref new_rec(void)
 
     int g1 = -1, g2 = -1, g3 = -1;                    // g1-2-3 default index -1
     char gp1[10] = "?", gp2[10] = "?", gp3[10] = "?"; // 3 genre preferences
-    char genre[17][12] = {"Action", "Adventure", "Animation", "Biography", "Comedy", "Crime", "Drama", "Family",
-                          "Fantasy", "History", "Horror", "Mystery", "Romance", "Sci-Fi", "Sport", "Thriller", "Documentary"};
+    char genre[AMOUNTOFGENRES][12] = {"Action", "Adventure", "Animation", "Biography", "Comedy", "Crime", "Documentary", "Drama", "Family",
+                          "Fantasy", "History", "Horror", "Musical", "Mystery", "Reality-TV", "Romance", "Sci-Fi", "Short", "Sport", "Thriller", "War"};
 
     char ar;
 
@@ -74,7 +77,7 @@ pref new_rec(void)
         printf("\nWrite 1 to 3 genres you want to see, separated by a comma (,) (Write '?' for a list of genres): \n");
         scanf(" %9s, %9s, %9s", &gp1, &gp2, &gp3);
 
-        for (int i = 0; i < 17; i++)
+        for (int i = 0; i < AMOUNTOFGENRES; i++)
         {
             if (strcmp(gp1, genre[i]) == 0)
             {
@@ -87,12 +90,12 @@ pref new_rec(void)
             else if (strcmp(gp3, genre[i]) == 0)
             {
                 g3 = i;
-            } // Get the 17 genre indexes 0-16
+            } // Get the 21 genre indexes 0-20
         }
 
         if (strcmp(gp1, "?") == 0)
         { // print list of genres
-            printf("\nAction, Adventure, Animation, Biography, Comedy, Crime, Drama, Family, \nFantasy, History, Horror, Mystery, Romance, Sci-Fi, Sport, Thriller, Documentary");
+            printf("\nAction, Adventure, Animation, Biography, Comedy, Crime, Drama, Family, \nFantasy, History, Horror, Musical, Mystery, Reality-TV, Romance, Sci-Fi, Short, Sport, Thriller, Documentary, War");
         }
 
     } while (g1 == -1); // repeat if no valid genre 1
@@ -128,6 +131,7 @@ pref new_rec(void)
     preference.min = min_rating;
     preference.max = max_rating;
     preference.timetowatch = diff;
+    preference.ageRating = ar;
 
     return preference;
 }
