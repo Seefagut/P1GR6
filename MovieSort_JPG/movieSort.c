@@ -57,9 +57,9 @@ void copyData(movieData *movieArray, int index, movieData *moviesPreSort, int in
 int main(void)
 {
     // temp input
-    char nc = 'n';
-    pref newMovie = {"Animation", 2, "Horror", 1, "", 3, 4, 7, 3000, 'y'};
-    conpref conWatch = {"Bridgerton", 10000};
+    char nc = 'c';
+    pref newMovie = {"", 2, "Comedy", 1, "Action", 3, 5, 7, 2000, 'y'};
+    conpref conWatch = {"Titanic", 10000};
     movieData conWatchData;
 
     // As a lot of data has to be stored, we will save it using dynamic memory allocation
@@ -77,6 +77,8 @@ int main(void)
 
     saveMovieData(moviesPreSort);
     sortMovies(moviesPreSort, movies, series, nc, newMovie, conWatch.seriesName, &conWatchData);
+    free(moviesPreSort);
+
     if (nc == 'c' && (strcmp(conWatchData.title, conWatch.seriesName) == 0))
     {
         printf("Name: %s, isSeries: %i, ageRating: %s, duration: %i, g1: %s, g2: %s, g3: %s, rating:%lf,\nActor1: %s, Actor2: %s, Actor3: %s, Actor4: %s\n",
@@ -109,7 +111,6 @@ int main(void)
         }
     }
 
-    free(moviesPreSort);
     free(movies);
     free(series);
 
